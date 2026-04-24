@@ -1,8 +1,11 @@
 # wez-workspace-alt
 
-A WezTerm plugin that tracks recently visited workspaces and provides an alternate-workspace toggle binding.
+A WezTerm plugin that provides:
 
-It uses [fifo-cache](https://github.com/roumail/fifo-cache) internally to remember the last two workspaces visited. Once two workspaces have been seen, pressing the toggle key switches back and forth between them.
+1. Alternate-workspace toggling (`LEADER|SHIFT+B`)
+2. Instrumented workspace switching for selectors/actions
+
+It tracks the last two unique workspaces using [fifo-cache](https://github.com/roumail/fifo-cache) and switches between them. Once two workspaces have been seen, pressing the toggle key switches back and forth between them.
 
 ## Installation
 
@@ -20,27 +23,23 @@ wez_ws_alt.apply_to_config(config)
 return config
 ```
 
-## Usage with a project selector
-The plugin needs to keep track of your workspaces and it does this by exporting an instrumented version of `wezterm.action.SwitchToWorkspace`: `switch_workspace`
-If you switch workspaces via an `InputSelector` or similar action, wrap your callback with `switch_workspace` so the plugin can track the transition:
-
-```lua
-wezterm.action.InputSelector {
-  -- ...
-  action = wez_ws_alt.switch_workspace(function(do_switch, path, label)
-    if not path then return end
-    do_switch(label, { cwd = path })
-  end),
-}
-```
-
-## API
+## Exports
 
 ### `apply_to_config(config)`
 
-Registers the `LEADER+SHIFT+B` keybinding that toggles between the last two visited workspaces. Has no effect until at least two distinct workspaces have been visited.
+Registers a keybinding on `config.keys`:
 
-### `switch_workspace(callback)`
+- key: `B`
+- mods: `LEADER|SHIFT`
+- action: switch to alternate workspace (if history is ready)
+
+Behavior:
+
+- Tracks current workspace on invocation
+- If fewer than 2 unique workspaces have been seen, does nothing
+- Otherwise switches to “the other” workspace in the 2-item cache
+
+### `switch_workspace(callback)`-> wezterm_action`
 
 Returns an instrumented `action_callback` that tracks workspace transitions before delegating to your callback.
 
@@ -48,3 +47,64 @@ The callback receives:
 - `do_switch(name, spawn)` — call this to perform the tracked workspace switch
 - `path` — the value passed as `id` in the selector choice
 - `label` — the display label of the selected choice
+
+Returns a `wezterm.action_callback(...)` suitable for `InputSelector.action` and similar event-driven selectors.
+
+This is the integration point for instrumented switching.
+
+## Callback Contract
+
+You pass a function with this exact shape:
+
+```lua
+function callback(do_switch, path, label)
+  -- your logic
+end
+```
+
+Parameters:
+
+- `do_switch(name, spawn?)`
+- `path` (selector `id` value)
+- `label` (selector label value)
+
+### `do_switch` contract
+
+`do_switch` is injected by this plugin and performs tracked workspace switching.
+
+Signature:
+
+```lua
+do_switch(name, spawn)
+```
+
+## Example Usage
+
+```lua
+local wez_ws_alt = wezterm.plugin.require("https://github.com/roumail/wez-workspace-alt")
+
+wez_ws_alt.apply_to_config(config)
+
+local action = wez_ws_alt.switch_workspace(function(do_switch, path, label)
+  if not path then
+    return
+  end
+  do_switch(label, { cwd = path })
+end)
+```
+
+Then use `action` as the `InputSelector.action`.
+
+## Invariants / Expectations
+
+- Workspace history capacity is fixed at 2.
+- History tracks unique names (as defined by fifo-cache behavior).
+- Alternate switch chooses the non-current workspace from the 2-item history.
+- No-op if target is nil or equals current workspace.
+
+## Error/Edge Behavior
+
+- If history is not ready (fewer than 2), alternate switch does nothing.
+- If selector is cancelled (`path == nil`), caller callback should no-op.
+- Empty/nil workspace names are ignored by tracker.
+

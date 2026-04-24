@@ -33,13 +33,18 @@ local function switch_to_alternate_workspace_action()
   end)
 end
 
+local function make_switcher(window, pane)
+  return function(name, spawn)
+    perform_tracked_switch(window, pane, name, spawn)
+  end
+end
+
 function M.switch_workspace(callback)
-  return wezterm.action_callback(function(window, pane, path, label)
-    local function do_switch(name, spawn)
-      perform_tracked_switch(window, pane, name, spawn)
-    end
+  local function handle_selector(window, pane, path, label)
+    local do_switch =  make_switcher(window, pane)
     callback(do_switch, path, label)
-  end)
+  end
+  return wezterm.action_callback(handle_selector)
 end
 
 function M.apply_to_config(config)
