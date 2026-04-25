@@ -23,13 +23,17 @@ local function switch_to_alternate_workspace_action()
   end)
 end
 
-function M.switch_workspace(callback)
+function M.switch_workspace(selector)
   return wezterm.action_callback(function(window, pane, path, label)
     if not path then return end
-    local function switch(name, spawn)
-      perform_tracked_switch(window, pane, name, spawn)
-    end
-    callback(switch, path, label)
+    local result = selector(path, label)
+    if not result then return end
+    perform_tracked_switch(
+      window,
+      pane,
+      result.name,
+      result.spawn
+    )
   end)
 end
 
