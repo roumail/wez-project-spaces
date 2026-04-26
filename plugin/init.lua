@@ -37,21 +37,22 @@ M.modes = {
   end,
 
   tab = function(ctx)
-    return wezterm.action.SpawnTab({
+    return wezterm.action.SpawnCommandInNewTab({
+      domain="CurrentPaneDomain",
       cwd = ctx.path,
-    })
+  })
   end,
 
   split_h = function(ctx)
     return wezterm.action.SplitHorizontal({
-      domain = { DomainName = "currentPaneDomain" },
+      domain = "CurrentPaneDomain" ,
       cwd = ctx.path,
     })
   end,
 
   split_v = function(ctx)
     return wezterm.action.SplitVertical({
-      domain = { DomainName = "currentPaneDomain" },
+      domain = "CurrentPaneDomain" ,
       cwd = ctx.path,
     })
   end,
