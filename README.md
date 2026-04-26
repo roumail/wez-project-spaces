@@ -2,7 +2,7 @@
 
 A WezTerm plugin that provides:
 
-1. Convenience methods for switching between directories by checking them out into either 1) workspaces or 2) split in current workspace (Coming soon)
+1. Convenience methods for switching between directories into workspaces, splits or windows.
 2. Tracking changes in workspace such that (`LEADER|SHIFT+B`) can be used to go to alternate workspace.
 
 It tracks the last two unique workspaces using [fifo-cache](https://github.com/roumail/fifo-cache) and switches between them. Once two workspaces have been seen, pressing the toggle key switches back and forth between them.
