@@ -2,7 +2,11 @@
 local wezterm = require 'wezterm'
 local M = {}
 
+-- local fifo_cache = require("plugins.fifo-cache.plugin")
 local fifo_cache = wezterm.plugin.require("https://github.com/roumail/fifo-cache")
+local wez_new_ws = wezterm.plugin.require("https://github.com/roumail/wez-new-workspace")
+-- local wez_new_ws = require("plugins.wez-new-workspace.plugin")
+wez_new_ws.setup()
 local workspace_cache = fifo_cache.new(2)
 local DEFAULT_WORKSPACE = "default"
 
@@ -12,6 +16,17 @@ local function resolve_action(ctx)
   if not handler then return nil end
   return handler(ctx)
 end
+
+wezterm.on('workspace-removed', function(event)
+   -- wezterm.log_info("cache readiness status", workspace_cache.is_ready())
+   -- wezterm.log_info("events removed", event.removed)
+   -- wezterm.log_info("events current", event.current)
+   workspace_cache.evict_keys(event.removed)
+   -- wezterm.log_info(
+   --   "known_workspaces=", wezterm.json_encode(wezterm.mux.get_workspace_names()),
+   --   "workspace_history=", wezterm.json_encode(workspace_cache.get_cache())
+   -- )
+end)
 
 M.modes = {
   workspace = function(ctx)
