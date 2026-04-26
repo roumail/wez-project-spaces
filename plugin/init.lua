@@ -17,15 +17,41 @@ local function resolve_action(ctx)
   return handler(ctx)
 end
 
+local function rebalance_cache(current)
+  local cache = workspace_cache.get_cache()
+
+  local in_cache = {}
+  for _, v in ipairs(cache) do
+      in_cache[v] = true
+  end
+
+  if not in_cache[DEFAULT_WORKSPACE] then
+      for _, v in ipairs(current) do
+          if v == DEFAULT_WORKSPACE then
+              workspace_cache.add_value(v)
+              return
+          end
+      end
+  end
+
+  -- Otherwise pick the first sorted candidate not already in cache
+  table.sort(current)
+
+  for _, v in ipairs(current) do
+    if not in_cache[v] then
+      workspace_cache.add_value(v)
+      return
+    end
+  end
+end
+
 wezterm.on('workspace-removed', function(event)
-   -- wezterm.log_info("cache readiness status", workspace_cache.is_ready())
-   -- wezterm.log_info("events removed", event.removed)
-   -- wezterm.log_info("events current", event.current)
+   ready_prior = workspace_cache.is_ready()
    workspace_cache.evict_keys(event.removed)
-   -- wezterm.log_info(
-   --   "known_workspaces=", wezterm.json_encode(wezterm.mux.get_workspace_names()),
-   --   "workspace_history=", wezterm.json_encode(workspace_cache.get_cache())
-   -- )
+   ready_post = workspace_cache.is_ready()
+   if ready_prior and not ready_post then
+     rebalance_cache(event.current)
+   end
 end)
 
 M.modes = {
