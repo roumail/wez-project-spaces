@@ -4,6 +4,7 @@ local M = {}
 
 local fifo_cache = wezterm.plugin.require("https://github.com/roumail/fifo-cache")
 local workspace_cache = fifo_cache.new(2)
+local DEFAULT_WORKSPACE = "default"
 
 local function resolve_action(ctx)
   local mode = ctx.mode
@@ -24,11 +25,15 @@ M.modes = {
   alternate_workspace = function(ctx)
     local current = ctx.current_workspace
     workspace_cache.add_value(current)
-
-    if not workspace_cache.is_ready() then return nil end
-
-    local history = ctx.workspace_history
-    local target = history[1] == current and history[2] or history[1]
+    local target
+    -- first trigger
+    if not workspace_cache.is_ready() then
+      if current == DEFAULT_WORKSPACE then return nil end
+      target = DEFAULT_WORKSPACE
+    else
+      local history = ctx.workspace_history
+      target = history[1] == current and history[2] or history[1]
+    end
 
     workspace_cache.add_value(target)
     return wezterm.action.SwitchToWorkspace({
