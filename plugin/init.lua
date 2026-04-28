@@ -3,6 +3,7 @@ local wezterm = require 'wezterm'
 local M = {}
 
 -- local fifo_cache = require("plugins.fifo-cache.plugin")
+local cache_settled = true
 local fifo_cache = wezterm.plugin.require("https://github.com/roumail/fifo-cache")
 local wez_new_ws = wezterm.plugin.require("https://github.com/roumail/wez-new-workspace")
 -- local wez_new_ws = require("plugins.wez-new-workspace.plugin")
@@ -50,19 +51,20 @@ local function rebalance_cache(current)
 end
 
 wezterm.on('workspace-removed', function(event)
-   -- Normalize cache first to prevent cache being out of sync
-   -- with reality
-   local current_set = {}
-   for _, name in ipairs(event.current) do
-     current_set[name] = true
-   end
+  cache_settled = false
+  -- Normalize cache first to prevent cache being out of sync
+  -- with reality
+  local current_set = {}
+  for _, name in ipairs(event.current) do
+    current_set[name] = true
+  end
 
-   local cache = workspace_cache.get_cache()
-   for _, name in ipairs(cache) do
-     if not current_set[name] then
-       workspace_cache.evict_keys(name)
-     end
-   end
+  local cache = workspace_cache.get_cache()
+  for _, name in ipairs(cache) do
+    if not current_set[name] then
+      workspace_cache.evict_keys(name)
+    end
+  end
   -- rebalance in the case where a previously ready cache
   -- now needs a replacement
   ready_prior = workspace_cache.is_ready()
@@ -71,6 +73,7 @@ wezterm.on('workspace-removed', function(event)
   if ready_prior and not ready_post then
     rebalance_cache(event.current)
   end
+  cache_settled = true
 end)
 
 M.modes = {
@@ -83,6 +86,7 @@ M.modes = {
   end,
 
   alternate_workspace = function(ctx)
+    if not cache_settled then return nil end
     local current = ctx.current_workspace
     workspace_cache.add_value(current)
     local target
