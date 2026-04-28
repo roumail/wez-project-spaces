@@ -50,6 +50,21 @@ local function rebalance_cache(current)
 end
 
 wezterm.on('workspace-removed', function(event)
+   -- Normalize cache first to prevent cache being out of sync
+   -- with reality
+   local current_set = {}
+   for _, name in ipairs(event.current) do
+     current_set[name] = true
+   end
+
+   local cache = workspace_cache.get_cache()
+   for _, name in ipairs(cache) do
+     if not current_set[name] then
+       workspace_cache.evict_keys(name)
+     end
+   end
+  -- rebalance in the case where a previously ready cache
+  -- now needs a replacement
   ready_prior = workspace_cache.is_ready()
   workspace_cache.evict_keys(event.removed)
   ready_post = workspace_cache.is_ready()
