@@ -139,13 +139,17 @@ function M.project_selector(mode, opts)
   -- source-selector layer
   return wezterm.action_callback(function(window, pane)
     if mode == "alternate_workspace" then
-      window:perform_action(resolve_action({
+      local action = resolve_action({
         window = window,
         pane = pane,
         current_workspace = window:active_workspace(),
         workspace_history = workspace_cache.get_cache(),
         mode = mode,
-      }), pane)
+      })
+
+      if action then
+        window:perform_action(action, pane)
+	  end
       return
     end
     local projects = opts.projects or get_default_projects()
