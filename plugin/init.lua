@@ -81,18 +81,66 @@ wezterm.on('workspace-removed', function(event)
   cache_settled = true
 end)
 
+local function strip_format(text)
+  if not text then return nil end
+
+  -- 1. Strip ANSI escape codes.
+  -- We MUST do this first because codes like '32m' look like words.
+  local clean = text:gsub("\27[^%a]*[%a]", "")
+
+  -- 2. Positive Extraction: Grab the workspace name!
+  -- We look for 2+ characters consisting of alphanumeric, underscore, hyphen, or dot.
+  -- This inherently ignores ZWS, bullets, whitespace, and stray single characters.
+  local workspace_name = clean:match("[%w_%.%-][%w_%.%-]+")
+
+  -- 3. Fallbacks
+  -- If we can't find 2 chars, try to find 1 valid char.
+  -- If that fails, just trim whatever is left.
+  if not workspace_name then
+    workspace_name = clean:match("[%w_%.%-]+") or clean:match("^%s*(.-)%s*$")
+  end
+
+  return workspace_name
+end
+
+local function format_item(label, is_active)
+  local MARKER = "\u{200b}"
+
+  -- IDEMPOTENCY CHECK:
+  -- If the string already contains our marker, it's already formatted.
+  -- We use plain = true to treat the marker as a literal string.
+  if label:find(MARKER, 1, true) then
+    return label
+  end
+
+  if is_active then
+    return MARKER .. wezterm.format({
+      { Attribute = { Intensity = "Bold" } },
+      { Foreground = { AnsiColor = "Green" } },
+      { Text = " ● " .. label .. " " },
+    })
+  else
+    return MARKER .. wezterm.format({
+       { Foreground = { AnsiColor = "Silver" } },
+       "ResetAttributes",
+      { Text = "   " .. label .. " " },
+    })
+  end
+end
 
 M.modes = {
   workspace = function(ctx)
     if not cache_settled then return nil end
-    workspace_cache.add_value(ctx.label)
+    workspace_name = strip_format(ctx.label)
+    workspace_cache.add_value(workspace_name)
     return wezterm.action.SwitchToWorkspace({
-      name = ctx.label,
+      name = workspace_name,
       spawn = { cwd = ctx.id },
     })
   end,
 
   alternate_workspace = function(ctx)
+    -- these come from history, thye should be clean already
     if not cache_settled then return nil end
     local current = ctx.current_workspace
     workspace_cache.add_value(current)
@@ -160,7 +208,7 @@ function M.project_selector(mode, opts)
     for _, name in ipairs(active_workspaces) do
       active_set[name] = true
       table.insert(choices, {
-        label = name,
+        label = format_item(name, true),
         id = name,
       })
     end
@@ -169,7 +217,7 @@ function M.project_selector(mode, opts)
       if type(p) == "table" and p.label and p.path then
         if not active_set[p.label] then
           table.insert(choices, {
-            label = p.label,
+            label = format_item(p.label, false),
             id = p.path,
           })
         end
