@@ -251,39 +251,61 @@ function M.project_selector(mode, opts)
   end)
 end
 
+local default_bindings = {
+  workspace = { key = "w", mods = "LEADER" },
+  alternate_workspace = function(config)
+    return {
+      key = string.upper(config.leader.key),
+      mods = "LEADER|SHIFT",
+    }
+  end,
+  tab = { key = "t", mods = "LEADER" },
+  split_v = { key = "V", mods = "LEADER|SHIFT" },
+  split_h = { key = "H", mods = "LEADER|SHIFT" },
+}
+
+local function resolve_binding(name, config, user_bindings)
+  local override = user_bindings and user_bindings[name]
+
+  if override == false then return nil end
+
+  if override then
+    return override
+  end
+
+  local default = default_bindings[name]
+  if type(default) == "function" then
+    return default(config)
+  end
+
+  return default
+end
+-- opts.bindings = {
+-- workspace = { key = "p", mods = "LEADER" },
+-- split_v = false,  -- disable this binding
+-- }
 function M.apply_to_config(config, opts)
   local leader_key = string.upper(config.leader.key)
   opts = opts or {}
-  my_keys = {
-    {
-      key = "w",
-      mods = "LEADER",
-      action = M.project_selector("workspace", opts),
-    },
-    {
-      key = leader_key,
-      mods = "LEADER|SHIFT",
-      action = M.project_selector("alternate_workspace", opts),
-    },
-    {
-      key    = "t",
-      mods   = "LEADER",
-      action = M.project_selector("tab", opts),
-    },
-    {
-      key    = "V",
-      mods   = "LEADER|SHIFT",
-      action = M.project_selector("split_v", opts),
-    },
-    {
-      key    = "H",
-      mods   = "LEADER|SHIFT",
-      action = M.project_selector("split_h", opts),
-    }
+  local bindings = opts.bindings or {}
+
+  local capabilities = {
+    "workspace",
+    "alternate_workspace",
+    "tab",
+    "split_v",
+    "split_h",
   }
-  for _, key in ipairs(my_keys) do
-    table.insert(config.keys, key)
+  for _, cap in ipairs(capabilities) do
+    local binding = resolve_binding(cap, config, bindings)
+    if binding then
+      table.insert(config.keys, {
+        key = binding.key,
+        mods = binding.mods,
+        action = M.project_selector(cap, opts),
+      })
+    end
   end
 end
 
-  return M
+return M
