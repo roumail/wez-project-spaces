@@ -2,8 +2,7 @@ local wezterm = require 'wezterm'
 local bindings = require("project-spaces.bindings")
 local ws_labels = require("project-spaces.workspace_labels")
 local mode_registry = require("project-spaces.modes")
--- TODO: absorb this plugin as a module instead
-local projects = wezterm.plugin.require("https://github.com/roumail/wez-projects-source").load_projects()
+local projects = require("project-spaces.projects").load_projects()
 local events = require("project-spaces.events")
 local ws_cache = require("project-spaces.workspace_cache")
 local M = {}
