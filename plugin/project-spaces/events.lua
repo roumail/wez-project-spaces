@@ -1,5 +1,5 @@
 local wezterm = require 'wezterm'
-local ws_cache = require("wez-project-spaces.workspace_cache")
+local ws_cache = require("project-spaces.workspace_cache")
 local M = {}
 
 function M.register()

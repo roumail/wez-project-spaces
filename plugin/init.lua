@@ -17,4 +17,4 @@ for _, plugin in ipairs(wezterm.plugin.list()) do
     end
 end
 
-return require("wez-project-spaces")
+return require("project-spaces")

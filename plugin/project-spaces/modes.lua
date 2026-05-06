@@ -1,5 +1,5 @@
-local ws_labels = require("wez-project-spaces.workspace_labels")
-local ws_cache = require("wez-project-spaces.workspace_cache")
+local ws_labels = require("project-spaces.workspace_labels")
+local ws_cache = require("project-spaces.workspace_cache")
 
 local M = {}
 

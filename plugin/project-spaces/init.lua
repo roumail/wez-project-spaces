@@ -1,9 +1,9 @@
 local wezterm = require 'wezterm'
-local bindings = require("wez-project-spaces.bindings")
-local ws_labels = require("wez-project-spaces.workspace_labels")
-local modes = require("wez-project-spaces.modes")
-local events = require("wez-project-spaces.events")
-local workspace_cache = require("wez-project-spaces.workspace_cache")
+local bindings = require("project-spaces.bindings")
+local ws_labels = require("project-spaces.workspace_labels")
+local modes = require("project-spaces.modes")
+local events = require("project-spaces.events")
+local workspace_cache = require("project-spaces.workspace_cache")
 local M = {}
 
 -- local wez_new_ws = require("plugins.wez-new-workspace.plugin")
