@@ -15,8 +15,6 @@ function M.build_modes()
             name = ctx.workspace_name,
             -- when user picks an already running workspace, you switch by name
             spawn = ctx.cwd and { cwd = ctx.cwd } or nil,
-            -- name = workspace_name,
-            -- spawn = { cwd = ctx.id },
           })
         end,
 
@@ -49,14 +47,14 @@ function M.build_modes()
           })
         end,
 
-        split_h = function(ctx)
+        split_v  = function(ctx)
           return wezterm.action.SplitHorizontal({
             domain = "CurrentPaneDomain" ,
             cwd = ctx.cwd,
           })
         end,
 
-        split_v = function(ctx)
+        split_h= function(ctx)
           return wezterm.action.SplitVertical({
             domain = "CurrentPaneDomain" ,
             cwd = ctx.cwd,

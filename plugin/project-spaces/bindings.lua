@@ -30,10 +30,6 @@ local function resolve_binding(name, config, user_bindings)
   return default
 end
 
--- opts.bindings = {
--- workspace = { key = "p", mods = "LEADER" },
--- split_v = false,  -- disable this binding
--- }
 function M.apply(config, opts, action_factory)
   opts = opts or {}
   local user = opts.bindings or {}
