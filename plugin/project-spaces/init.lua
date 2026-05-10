@@ -61,8 +61,7 @@ local function project_selector(capability, opts)
     local active_workspaces = wezterm.mux.get_workspace_names()
     local active_set = {}
     for _, name in ipairs(active_workspaces) do
-      -- ensure these are stripped names
-      active_set[ws_labels.strip_format(name)] = true
+      active_set[name] = true
     end
     -- default should be there
     local workspaces = {}
