@@ -13,8 +13,8 @@ function M.build_modes()
           return wezterm.action.SwitchToWorkspace({
             name = ctx.workspace_name,
             -- when user picks an already running workspace, you switch by name
-            spawn = ctx.is_active_workspace
-            and nil or { cwd = ctx.target_path },
+            spawn = ctx.is_active
+            and nil or { cwd = ctx.path },
           })
         end,
 
@@ -43,21 +43,21 @@ function M.build_modes()
         tab = function(ctx)
           return wezterm.action.SpawnCommandInNewTab({
             domain="CurrentPaneDomain",
-            cwd = ctx.target_path,
+            cwd = ctx.path,
           })
         end,
 
         split_v  = function(ctx)
           return wezterm.action.SplitHorizontal({
             domain = "CurrentPaneDomain" ,
-            cwd = ctx.target_path,
+            cwd = ctx.path,
           })
         end,
 
         split_h= function(ctx)
           return wezterm.action.SplitVertical({
             domain = "CurrentPaneDomain" ,
-            cwd = ctx.target_path,
+            cwd = ctx.path,
           })
         end,
       }

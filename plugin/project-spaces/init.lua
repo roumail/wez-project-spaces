@@ -21,18 +21,18 @@ local function resolve_action(modes, ctx)
   return handler(ctx)
 end
 
-local function build_ctx(window, pane, mode, extra)
+local function build_ctx(window, pane, mode, ws)
   return {
     window = window,
     pane = pane,
     mode = mode,
     current_workspace = window:active_workspace(),
-    cwd = pane:get_current_working_dir(),
     workspace_history = ws_cache.get(),
     default_workspace = ws_cache.default_workspace(),
-    workspace_name = extra and extra.workspace_name,
-    target_path = extra and extra.target_path,
-  }
+    workspace_name = ws and ws.workspace_name,
+    path = ws and ws.path,
+    is_active = ws and ws.is_active,
+    formatted_label = ws and ws.formatted_label,}
 end
 
 local function project_selector(capability, opts)
@@ -52,39 +52,30 @@ local function project_selector(capability, opts)
     end
     local active_workspaces = wezterm.mux.get_workspace_names()
     local active_set = {}
-    local choices = {}
-    local choice_meta = {}
-
-    -- reason to store active workspaces by name and
-    -- others by path is because the formatted names
-    -- create issues
     for _, name in ipairs(active_workspaces) do
-      active_set[name] = true
-      choice_meta[name] = {
-        workspace_name = name,
-        is_active_workspace = true,
+      -- ensure these are stripped names
+      active_set[ws_labels.strip_format(name)] = true
+    end
+    -- default should be there
+    local workspaces = {}
+    for _, p in ipairs(projects) do
+      local is_active = active_set[p.label]
+      workspaces[p.label] = {
+        workspace_name = p.label,
+        path = p.path,
+        is_active = is_active,
+        formatted_label = ws_labels.format_item(p.label, is_active),
       }
+    end
+    local choices = {}
+    for _, ws in pairs(workspaces) do
       table.insert(choices, {
-        label = ws_labels.format_item(name, true),
-        id = name,
+        id = ws.workspace_name,
+        label = ws.formatted_label,
       })
     end
 
-    for _, p in ipairs(projects) do
-      if type(p) == "table" and p.label and p.path then
-        if not active_set[p.label] then
-          choice_meta[p.path] = {
-            workspace_name = p.label,
-            is_active_workspace=false,
-          }
-          table.insert(choices, {
-            label = ws_labels.format_item(p.label, false),
-            id = p.path,
-          })
-        end
-      end
-    end
-
+    -- add sort in order of active
     -- input selector
     window:perform_action(
       wezterm.action.InputSelector {
@@ -94,16 +85,15 @@ local function project_selector(capability, opts)
         choices = choices,
         description = 'choose active or new workspace',
         -- switcher layer
-        action = wezterm.action_callback(function(window, pane, target_path, label)
-          if not target_path and not label then return end
-          -- in case it's an active workspace it's going to be
-          -- keyed by name, else by path
-          local meta = choice_meta[label] or choice_meta[target_path] or {}
-          local ctx = build_ctx(window, pane, capability, {
-              workspace_name = meta.workspace_name,
-              is_active_workspace= meta.is_active_workspace,
-              target_path = target_path,
-            })
+        action = wezterm.action_callback(function(window, pane, id, label)
+          if not id and not label then return end
+          wezterm.log_info("workspaces", wezterm.json_encode(workspaces))
+          wezterm.log_info("id", id)
+          local ws = workspaces[id]
+          if not ws then
+            return
+          end
+          local ctx = build_ctx(window, pane, capability, ws)
           local next_action = resolve_action(handlers, ctx)
           if next_action then
             window:perform_action(next_action, pane)
