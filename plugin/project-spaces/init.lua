@@ -31,6 +31,7 @@ local function build_ctx(window, pane, mode, extra)
     workspace_history = ws_cache.get(),
     default_workspace = ws_cache.default_workspace(),
     workspace_name = extra and extra.workspace_name,
+    target_path = extra and extra.target_path,
   }
 end
 
@@ -54,6 +55,7 @@ local function project_selector(capability, opts)
     local choice_meta = {}
 
     for _, name in ipairs(active_workspaces) do
+      -- choice_meta could be made key - value
       choice_meta[name] = {
         workspace_name = name,
         is_active_workspace = true,
@@ -90,7 +92,8 @@ local function project_selector(capability, opts)
         -- switcher layer
         action = wezterm.action_callback(function(window, pane, target_path, label)
           if not target_path and not label then return end
-          local meta = choice_meta[label] or {}
+          -- de format the label in case it's an active workspace
+          local meta = choice_meta[ws_labels.strip_format(label)] or {}
           local ctx = build_ctx(window, pane, capability, {
               workspace_name = meta.workspace_name,
               is_active_workspace= meta.is_active_workspace,
