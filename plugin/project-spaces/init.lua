@@ -51,11 +51,15 @@ local function project_selector(capability, opts)
       return
     end
     local active_workspaces = wezterm.mux.get_workspace_names()
+    local active_set = {}
     local choices = {}
     local choice_meta = {}
 
+    -- reason to store active workspaces by name and
+    -- others by path is because the formatted names
+    -- create issues
     for _, name in ipairs(active_workspaces) do
-      -- choice_meta could be made key - value
+      active_set[name] = true
       choice_meta[name] = {
         workspace_name = name,
         is_active_workspace = true,
@@ -68,8 +72,8 @@ local function project_selector(capability, opts)
 
     for _, p in ipairs(projects) do
       if type(p) == "table" and p.label and p.path then
-        if not choice_meta[p.label] then
-          choice_meta[p.label] = {
+        if not active_set[p.label] then
+          choice_meta[p.path] = {
             workspace_name = p.label,
             is_active_workspace=false,
           }
@@ -92,8 +96,9 @@ local function project_selector(capability, opts)
         -- switcher layer
         action = wezterm.action_callback(function(window, pane, target_path, label)
           if not target_path and not label then return end
-          -- de format the label in case it's an active workspace
-          local meta = choice_meta[ws_labels.strip_format(label)] or {}
+          -- in case it's an active workspace it's going to be
+          -- keyed by name, else by path
+          local meta = choice_meta[label] or choice_meta[target_path] or {}
           local ctx = build_ctx(window, pane, capability, {
               workspace_name = meta.workspace_name,
               is_active_workspace= meta.is_active_workspace,
