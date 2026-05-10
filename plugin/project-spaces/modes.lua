@@ -9,12 +9,12 @@ function M.build_modes()
   return {
         workspace = function(ctx)
           if not ws_cache.is_settled() then return nil end
-          -- local workspace_name = ws_labels.strip_format(ctx.label)
           ws_cache.add(ctx.workspace_name)
           return wezterm.action.SwitchToWorkspace({
             name = ctx.workspace_name,
             -- when user picks an already running workspace, you switch by name
-            spawn = ctx.cwd and { cwd = ctx.cwd } or nil,
+            spawn = ctx.is_active_workspace
+            and nil or { cwd = ctx.target_path },
           })
         end,
 
@@ -43,21 +43,21 @@ function M.build_modes()
         tab = function(ctx)
           return wezterm.action.SpawnCommandInNewTab({
             domain="CurrentPaneDomain",
-            cwd = ctx.cwd,
+            cwd = ctx.target_path,
           })
         end,
 
         split_v  = function(ctx)
           return wezterm.action.SplitHorizontal({
             domain = "CurrentPaneDomain" ,
-            cwd = ctx.cwd,
+            cwd = ctx.target_path,
           })
         end,
 
         split_h= function(ctx)
           return wezterm.action.SplitVertical({
             domain = "CurrentPaneDomain" ,
-            cwd = ctx.cwd,
+            cwd = ctx.target_path,
           })
         end,
       }
