@@ -103,8 +103,6 @@ local function project_selector(capability, opts)
         -- switcher layer
         action = wezterm.action_callback(function(window, pane, id, label)
           if not id and not label then return end
-          wezterm.log_info("workspaces", wezterm.json_encode(workspaces))
-          wezterm.log_info("id", id)
           local ws = workspaces[id]
           if not ws then
             return
