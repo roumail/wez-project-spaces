@@ -38,7 +38,7 @@ function M.load_projects()
   local paths = { home_path, config_path }
 
   local base_projects = {
-    { label = "wez_home", path = wezterm.home_dir },
+    { label = "default", path = wezterm.home_dir },
     { label = "home", path = "~" },
     { label = "config_dir", path = wezterm.config_dir },
   }

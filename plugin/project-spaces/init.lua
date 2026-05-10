@@ -35,6 +35,14 @@ local function build_ctx(window, pane, mode, ws)
     formatted_label = ws and ws.formatted_label,}
 end
 
+local function expand_home(path)
+  if path == "~" then
+    return wezterm.home_dir
+  end
+
+  return path:gsub("^~/", wezterm.home_dir .. "/", 1)
+end
+
 local function project_selector(capability, opts)
   local opts = opts or {}
   local title = opts.title or ("Select Project (" .. capability .. ")")
@@ -62,7 +70,7 @@ local function project_selector(capability, opts)
       local is_active = active_set[p.label]
       workspaces[p.label] = {
         workspace_name = p.label,
-        path = p.path,
+        path = expand_home(p.path),
         is_active = is_active,
         formatted_label = ws_labels.format_item(p.label, is_active),
       }
@@ -75,8 +83,17 @@ local function project_selector(capability, opts)
       })
     end
 
-    -- add sort in order of active
     -- input selector
+    table.sort(choices, function(a, b)
+      local wa = workspaces[a.id]
+      local wb = workspaces[b.id]
+
+      if wa.is_active ~= wb.is_active then
+        return wa.is_active
+      end
+
+      return wa.workspace_name < wb.workspace_name
+    end)
     window:perform_action(
       wezterm.action.InputSelector {
         title = title,
