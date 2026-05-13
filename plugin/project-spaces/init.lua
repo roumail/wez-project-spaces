@@ -65,7 +65,7 @@ local function project_selector(capability, opts)
     end
     local num_tabs_by_workspace = {}
 
-    for _, mux_window in ipairs(mux.all_windows()) do
+    for _, mux_window in ipairs(wezterm.mux.all_windows()) do
       local workspace = mux_window:get_workspace()
       local num_tabs = #mux_window:tabs()
 
