@@ -4,6 +4,14 @@ local ws_labels = require("project-spaces.workspace_labels")
 
 local M = {}
 
+local function expand_home(path)
+  if path == "~" then
+    return wezterm.home_dir
+  end
+
+  return path:gsub("^~/", wezterm.home_dir .. "/", 1)
+end
+
 function M.build()
     local active_workspaces = wezterm.mux.get_workspace_names()
     local active_set = {}
@@ -16,8 +24,7 @@ function M.build()
       local workspace = mux_window:get_workspace()
       local num_tabs = #mux_window:tabs()
 
-      local num_tabs_by_workspace[workspace] =
-        (num_tabs_by_workspace[workspace] or 0) + num_tabs
+      num_tabs_by_workspace[workspace] = (num_tabs_by_workspace[workspace] or 0) + num_tabs
     end
 
     -- default should be there
@@ -25,7 +32,7 @@ function M.build()
     local projects = project_store.all()
     for _, p in ipairs(projects) do
       local is_active = active_set[p.label]
-      tab_count = num_tabs_by_workspace[p.label] or 0
+      local tab_count = num_tabs_by_workspace[p.label] or 0
       workspaces[p.label] = {
         workspace_name = p.label,
         path = expand_home(p.path),

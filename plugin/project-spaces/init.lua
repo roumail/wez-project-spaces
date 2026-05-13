@@ -34,14 +34,6 @@ local function build_ctx(window, pane, mode, ws)
     formatted_label = ws and ws.formatted_label,}
 end
 
-local function expand_home(path)
-  if path == "~" then
-    return wezterm.home_dir
-  end
-
-  return path:gsub("^~/", wezterm.home_dir .. "/", 1)
-end
-
 local function project_selector(capability, opts)
   local opts = opts or {}
   local title = opts.title or ("Select Project (" .. capability .. ")")
