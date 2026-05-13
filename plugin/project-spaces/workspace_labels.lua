@@ -27,9 +27,9 @@ function M.format_item(label, is_active, tab_count)
   local MARKER = "\u{200b}"
 
   local tabs =
-      ws.tab_count == 1
+      tab_count == 1
       and "1 tab"
-      or tostring(ws.tab_count) .. " tabs"
+      or tostring(tab_count) .. " tabs"
   -- IDEMPOTENCY CHECK:
   -- If the string already contains our marker, it's already formatted.
   -- We use plain = true to treat the marker as a literal string.
