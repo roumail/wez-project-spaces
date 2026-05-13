@@ -120,24 +120,6 @@ local function project_selector(capability, opts)
             end
             return
           end
-          -- It works like this but now I'm trying to add a mode for this
-          -- and have this available in the workspaces id
-          -- if id == "___NEW___" then
-          --   window:perform_action(wezterm.action.PromptInputLine {
-          --     description = "Enter workspace name:",
-          --     action = wezterm.action_callback(function(window, pane, line)
-          --     if not line or line == "" then return end
-          --     window:perform_action(
-          --         wezterm.action.SwitchToWorkspace({
-          --           name = line,
-          --           spawn = { cwd = wezterm.home_dir },
-          --         }),
-          --         pane
-          --       )
-          --     end),
-          --   }, pane)
-          --   return
-          -- end
           local ws = workspaces[id]
           if not ws then
             return

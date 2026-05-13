@@ -8,20 +8,24 @@ local M = {}
 
 function M.build_modes()
   return {
-        -- this is not integrated in the workspace cache and the
-        -- choices won't show this since it's not part of the project list
         new_workspace = function(ctx)
           ctx.window:perform_action(
             wezterm.action.PromptInputLine {
               description = "Enter workspace name:",
               action = wezterm.action_callback(function(window, pane, line)
               if not line or line == "" then return end
+
+              if not ws_cache.is_settled() then
+                return
+              end
+
               if not project_store.exists(line) then
                 project_store.add({
                   label = line,
                   path = wezterm.home_dir,
                 })
               end
+              ws_cache.add(line)
               window:perform_action(
                 wezterm.action.SwitchToWorkspace({
                   name = line,
