@@ -1,8 +1,7 @@
 local wezterm = require 'wezterm'
 local bindings = require("project-spaces.bindings")
-local ws_labels = require("project-spaces.workspace_labels")
 local mode_registry = require("project-spaces.modes")
-local project_store = require("project-spaces.projects")
+local selector_builder = require("project-spaces.selector_builder")
 local events = require("project-spaces.events")
 local ws_cache = require("project-spaces.workspace_cache")
 local M = {}
@@ -58,66 +57,13 @@ local function project_selector(capability, opts)
 	  end
       return
     end
-    local active_workspaces = wezterm.mux.get_workspace_names()
-    local active_set = {}
-    for _, name in ipairs(active_workspaces) do
-      active_set[name] = true
-    end
-    local num_tabs_by_workspace = {}
-
-    for _, mux_window in ipairs(wezterm.mux.all_windows()) do
-      local workspace = mux_window:get_workspace()
-      local num_tabs = #mux_window:tabs()
-
-      num_tabs_by_workspace[workspace] =
-        (num_tabs_by_workspace[workspace] or 0) + num_tabs
-    end
-    -- default should be there
-    local workspaces = {}
-    local projects = project_store.all()
-    for _, p in ipairs(projects) do
-      local is_active = active_set[p.label]
-      tab_count = num_tabs_by_workspace[p.label] or 0
-      workspaces[p.label] = {
-        workspace_name = p.label,
-        path = expand_home(p.path),
-        is_active = is_active,
-        formatted_label = ws_labels.format_item(p.label, is_active, tab_count),
-      }
-    end
-    local choices = {}
-    for _, ws in pairs(workspaces) do
-      table.insert(choices, {
-        id = ws.workspace_name,
-        label = ws.formatted_label,
-      })
-    end
-
-    -- input selector
-    table.sort(choices, function(a, b)
-      local wa = workspaces[a.id]
-      local wb = workspaces[b.id]
-
-      if wa.is_active ~= wb.is_active then
-        return wa.is_active
-      end
-
-      return wa.workspace_name < wb.workspace_name
-    end)
-    table.insert(choices, 1, {
-      id = "___NEW___",
-      label = wezterm.format({
-          { Foreground = { AnsiColor = 'Green' } },
-          { Text = " + Create New Workspace..." },
-        })
-    }
-    )
+    local selector_model = selector_builder.build()
     window:perform_action(
       wezterm.action.InputSelector {
         title = title,
         fuzzy=true,
         --- use wezformat.format on active and display them above
-        choices = choices,
+        choices = selector_model.choices,
         description = 'choose active or new workspace',
         -- switcher layer
         action = wezterm.action_callback(function(window, pane, id, label)
@@ -130,7 +76,7 @@ local function project_selector(capability, opts)
             end
             return
           end
-          local ws = workspaces[id]
+          local ws = selector_model.workspaces[id]
           if not ws then
             return
           end
