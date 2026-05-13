@@ -63,16 +63,26 @@ local function project_selector(capability, opts)
     for _, name in ipairs(active_workspaces) do
       active_set[name] = true
     end
+    local num_tabs_by_workspace = {}
+
+    for _, mux_window in ipairs(mux.all_windows()) do
+      local workspace = mux_window:get_workspace()
+      local num_tabs = #mux_window:tabs()
+
+      num_tabs_by_workspace[workspace] =
+        (num_tabs_by_workspace[workspace] or 0) + num_tabs
+    end
     -- default should be there
     local workspaces = {}
     local projects = project_store.all()
     for _, p in ipairs(projects) do
       local is_active = active_set[p.label]
+      tab_count = num_tabs_by_workspace[p.label] or 0
       workspaces[p.label] = {
         workspace_name = p.label,
         path = expand_home(p.path),
         is_active = is_active,
-        formatted_label = ws_labels.format_item(p.label, is_active),
+        formatted_label = ws_labels.format_item(p.label, is_active, tab_count),
       }
     end
     local choices = {}

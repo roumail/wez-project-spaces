@@ -23,9 +23,13 @@ function M.strip_format(text)
   return workspace_name
 end
 
-function M.format_item(label, is_active)
+function M.format_item(label, is_active, tab_count)
   local MARKER = "\u{200b}"
 
+  local tabs =
+      ws.tab_count == 1
+      and "1 tab"
+      or tostring(ws.tab_count) .. " tabs"
   -- IDEMPOTENCY CHECK:
   -- If the string already contains our marker, it's already formatted.
   -- We use plain = true to treat the marker as a literal string.
@@ -37,7 +41,7 @@ function M.format_item(label, is_active)
     return MARKER .. wezterm.format({
       { Attribute = { Intensity = "Bold" } },
       { Foreground = { AnsiColor = "Green" } },
-      { Text = " ● " .. label .. " " },
+      { Text = " ● " .. label .. " (" .. tabs .. ")" },
     })
   else
     return MARKER .. wezterm.format({
