@@ -1,12 +1,39 @@
 local wezterm = require 'wezterm'
 local ws_labels = require("project-spaces.workspace_labels")
 local ws_cache = require("project-spaces.workspace_cache")
+local project_store = require("project-spaces.projects")
 
 local M = {}
 
 
 function M.build_modes()
   return {
+        -- this is not integrated in the workspace cache and the
+        -- choices won't show this since it's not part of the project list
+        new_workspace = function(ctx)
+          ctx.window:perform_action(
+            wezterm.action.PromptInputLine {
+              description = "Enter workspace name:",
+              action = wezterm.action_callback(function(window, pane, line)
+              if not line or line == "" then return end
+              if not project_store.exists(line) then
+                project_store.add({
+                  label = line,
+                  path = wezterm.home_dir,
+                })
+              end
+              window:perform_action(
+                wezterm.action.SwitchToWorkspace({
+                  name = line,
+                  spawn = { cwd = wezterm.home_dir },
+                }),
+                pane
+              )
+            end),
+          },
+         ctx.pane)
+        end,
+
         workspace = function(ctx)
           if not ws_cache.is_settled() then return nil end
           ws_cache.add(ctx.workspace_name)

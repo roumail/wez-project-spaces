@@ -1,7 +1,7 @@
 -- wez_project_source.lua
 local wezterm = require("wezterm")
 local M = {}
-
+local runtime_projects = nil
 local FILE_NAME = "local_projects.lua"
 
 local function try_load(path)
@@ -31,7 +31,7 @@ local function merge_projects(base, loaded)
   return projects
 end
 
-function M.load_projects()
+local function load_projects()
   local home_path = wezterm.home_dir .. "/" .. FILE_NAME
   local config_path = wezterm.config_dir .. "/" .. FILE_NAME
 
@@ -60,6 +60,27 @@ function M.load_projects()
     "\nLast error: " .. tostring(last_err)
   )
   return base_projects
+end
+
+function M.all()
+if not runtime_projects then
+  runtime_projects = load_projects()
+end
+
+return runtime_projects
+end
+
+function M.exists(label)
+  for _, p in ipairs(M.all()) do
+    if p.label == label then
+      return true
+    end
+  end
+  return false
+end
+
+function M.add(project)
+  table.insert(M.all(), project)
 end
 
 return M

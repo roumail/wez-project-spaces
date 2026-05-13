@@ -2,7 +2,7 @@ local wezterm = require 'wezterm'
 local bindings = require("project-spaces.bindings")
 local ws_labels = require("project-spaces.workspace_labels")
 local mode_registry = require("project-spaces.modes")
-local projects = require("project-spaces.projects").load_projects()
+local project_store = require("project-spaces.projects")
 local events = require("project-spaces.events")
 local ws_cache = require("project-spaces.workspace_cache")
 local M = {}
@@ -65,6 +65,7 @@ local function project_selector(capability, opts)
     end
     -- default should be there
     local workspaces = {}
+    local projects = project_store.all()
     for _, p in ipairs(projects) do
       local is_active = active_set[p.label]
       workspaces[p.label] = {
@@ -93,6 +94,14 @@ local function project_selector(capability, opts)
 
       return wa.workspace_name < wb.workspace_name
     end)
+    table.insert(choices, 1, {
+      id = "___NEW___",
+      label = wezterm.format({
+          { Foreground = { AnsiColor = 'Green' } },
+          { Text = " + Create New Workspace..." },
+        })
+    }
+    )
     window:perform_action(
       wezterm.action.InputSelector {
         title = title,
@@ -103,6 +112,32 @@ local function project_selector(capability, opts)
         -- switcher layer
         action = wezterm.action_callback(function(window, pane, id, label)
           if not id and not label then return end
+          if id == "___NEW___" then
+            local ctx = build_ctx(window, pane, "new_workspace")
+            local next_action = resolve_action(handlers, ctx)
+            if next_action then
+              window:perform_action(next_action, pane)
+            end
+            return
+          end
+          -- It works like this but now I'm trying to add a mode for this
+          -- and have this available in the workspaces id
+          -- if id == "___NEW___" then
+          --   window:perform_action(wezterm.action.PromptInputLine {
+          --     description = "Enter workspace name:",
+          --     action = wezterm.action_callback(function(window, pane, line)
+          --     if not line or line == "" then return end
+          --     window:perform_action(
+          --         wezterm.action.SwitchToWorkspace({
+          --           name = line,
+          --           spawn = { cwd = wezterm.home_dir },
+          --         }),
+          --         pane
+          --       )
+          --     end),
+          --   }, pane)
+          --   return
+          -- end
           local ws = workspaces[id]
           if not ws then
             return
