@@ -1,4 +1,5 @@
--- wez_new_workspace.lua
+-- TODO: just name isn't enough, add the pane working directory too for the
+-- workspace
 local wezterm = require 'wezterm'
 local M = {}
 
