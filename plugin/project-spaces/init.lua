@@ -4,13 +4,17 @@ local mode_registry = require("project-spaces.modes")
 local selector_builder = require("project-spaces.selector_builder")
 local events = require("project-spaces.events")
 local ws_cache = require("project-spaces.workspace_cache")
+local ws_new = require("project-spaces.new_workspace")
 local M = {}
-
+-- TODO: take work, as a label, if I rename that, currently active workspace
+-- I'd have expected it to appear as another entry in my active projects under the new name
+-- and continue to see the old work workspace as a separate entry
+-- That's however not the case
 -- local wez_new_ws = require("plugins.wez-new-workspace.plugin")
 -- https://github.com/wezterm/wezterm/issues/2933
 -- wsl expects this to be done sooner
 wezterm.on('gui-startup', function()
-  wezterm.plugin.require("https://github.com/roumail/wez-new-workspace").setup()
+  ws_new.setup()
   events.register()
 end)
 
