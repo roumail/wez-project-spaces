@@ -1,6 +1,6 @@
 local wezterm = require 'wezterm'
 local ws_labels = require("project-spaces.workspace_labels")
-local ws_cache = require("project-spaces.workspace_cache")
+local ws_history = require("project-spaces.workspace_history")
 local project_store = require("project-spaces.projects")
 
 local M = {}
@@ -15,17 +15,13 @@ function M.build_modes()
               action = wezterm.action_callback(function(window, pane, line)
               if not line or line == "" then return end
 
-              if not ws_cache.is_settled() then
-                return
-              end
-
               if not project_store.exists(line) then
                 project_store.add({
                   label = line,
                   path = wezterm.home_dir,
                 })
               end
-              ws_cache.add(line)
+              ws_history.touch(line)
               window:perform_action(
                 wezterm.action.SwitchToWorkspace({
                   name = line,
@@ -39,8 +35,7 @@ function M.build_modes()
         end,
 
         workspace = function(ctx)
-          if not ws_cache.is_settled() then return nil end
-          ws_cache.add(ctx.workspace_name)
+          ws_history.touch(ctx.workspace_name)
           return wezterm.action.SwitchToWorkspace({
             name = ctx.workspace_name,
             -- when user picks an already running workspace, you switch by name
@@ -50,17 +45,11 @@ function M.build_modes()
         end,
 
         alternate_workspace = function(ctx)
-          if not ws_cache.is_settled() then return nil end
-          -- The cache can outlive workspaces, only switch to one that exists
-          ws_cache.prune(wezterm.mux.get_workspace_names())
-          if not ws_cache.is_full() then return nil end
-          local history = ws_cache.get()
-          -- This is what we will be switching from so we reverse the order
-          ws_cache.reorder()
-          local target = history[1] == ctx.current_workspace and history[2] or history[1]
-          -- wezterm.log_info("history post", history)
-          -- wezterm.log_info("target", target)
-          -- wezterm.log_info("-------")
+          -- The history can outlive workspaces, only switch to one that exists
+          ws_history.prune(wezterm.mux.get_workspace_names())
+          local target = ws_history.previous(ctx.current_workspace)
+          if not target then return nil end
+          ws_history.touch(target)
           return wezterm.action.SwitchToWorkspace({
             name = target,
           })

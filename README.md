@@ -46,13 +46,14 @@ This allows you to reuse the same entry point (the selector) while controlling h
 
 Quickly jump between your last two active workspaces:
 
-* Tracks the last two **unique workspaces**
+* Tracks the two most recently used **unique workspaces**
 * Toggle key switches back and forth between them
-* Backed by a simple FIFO cache
+* History survives config reloads (kept in `wezterm.GLOBAL`)
 
 Behavior:
 
-* If fewer than 2 workspaces exist → toggle is a no-op
+* If no other workspace exists → toggle is a no-op
+* Workspaces that were closed are skipped
 * Re-selecting the same workspace does not duplicate it
 
 

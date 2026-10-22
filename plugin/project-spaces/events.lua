@@ -1,11 +1,11 @@
 local wezterm = require 'wezterm'
-local ws_cache = require("project-spaces.workspace_cache")
+local ws_history = require("project-spaces.workspace_history")
 local project_store = require("project-spaces.projects")
 local M = {}
 
 function M.register()
   wezterm.on("workspace-removed", function(event)
-    ws_cache.handle_workspace_removed(event)
+    ws_history.prune(event.current)
   end)
   -- handle case adding a renamed workspace to the choices list
   wezterm.on("workspace-added", function(event)
@@ -20,7 +20,7 @@ function M.register()
     end
   end)
   wezterm.on("workspace-activated", function(name)
-    ws_cache.add(name)
+    ws_history.touch(name)
   end)
 end
 return M
