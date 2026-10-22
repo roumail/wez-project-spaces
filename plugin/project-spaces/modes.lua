@@ -55,7 +55,7 @@ function M.build_modes()
           -- This is what we will be switching from so we reverse the order
           ws_cache.reorder()
           local history = ctx.workspace_history
-          local target = history[1] == current and history[2] or history[1]
+          local target = history[1] == ctx.current_workspace and history[2] or history[1]
           -- wezterm.log_info("history post", history)
           -- wezterm.log_info("target", target)
           -- wezterm.log_info("-------")
