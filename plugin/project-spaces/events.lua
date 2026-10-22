@@ -19,5 +19,8 @@ function M.register()
       end
     end
   end)
+  wezterm.on("workspace-activated", function(name)
+    ws_cache.add(name)
+  end)
 end
 return M

@@ -67,6 +67,9 @@ function M.setup()
         })
       end
       last_seen = updated_set
+      -- covers switches made outside the plugin, e.g. wezterm moving
+      -- the window on when a workspace closes
+      wezterm.emit("workspace-activated", current_workspace)
     end
   end)
 end
