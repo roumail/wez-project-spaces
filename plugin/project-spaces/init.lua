@@ -3,17 +3,13 @@ local bindings = require("project-spaces.bindings")
 local mode_registry = require("project-spaces.modes")
 local selector_builder = require("project-spaces.selector_builder")
 local ws_watcher = require("project-spaces.workspace_watcher")
+local registered = false
 local M = {}
 -- TODO: take work, as a label, if I rename that, currently active workspace
 -- I'd have expected it to appear as another entry in my active projects under the new name
 -- and continue to see the old work workspace as a separate entry
 -- That's however not the case
 -- local wez_new_ws = require("plugins.wez-new-workspace.plugin")
--- https://github.com/wezterm/wezterm/issues/2933
--- wsl expects this to be done sooner
-wezterm.on('gui-startup', function()
-  ws_watcher.register()
-end)
 
 local function resolve_action(modes, ctx)
   local handler = modes[ctx.mode]
@@ -84,6 +80,12 @@ local function project_selector(capability, opts)
 end
 
 function M.apply_to_config(config, opts)
+  -- Handlers live in the Lua state of this config evaluation, gui-startup
+  -- fires only once so registering there loses them on reload
+  if not registered then
+    ws_watcher.register()
+    registered = true
+  end
   bindings.apply(config, opts, function(mode)
     return project_selector(mode, opts)
   end)
