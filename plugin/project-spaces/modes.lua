@@ -51,10 +51,12 @@ function M.build_modes()
 
         alternate_workspace = function(ctx)
           if not ws_cache.is_settled() then return nil end
+          -- The cache can outlive workspaces, only switch to one that exists
+          ws_cache.prune(wezterm.mux.get_workspace_names())
           if not ws_cache.is_full() then return nil end
+          local history = ws_cache.get()
           -- This is what we will be switching from so we reverse the order
           ws_cache.reorder()
-          local history = ctx.workspace_history
           local target = history[1] == ctx.current_workspace and history[2] or history[1]
           -- wezterm.log_info("history post", history)
           -- wezterm.log_info("target", target)
