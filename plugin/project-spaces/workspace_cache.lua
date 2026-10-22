@@ -42,7 +42,7 @@ function M.handle_workspace_removed(event)
   local cache = workspace_cache.get_cache()
   for _, name in ipairs(cache) do
     if not current_set[name] then
-      workspace_cache.evict_keys(name)
+      workspace_cache.evict_keys({ name })
     end
   end
   workspace_cache.evict_keys(event.removed)
