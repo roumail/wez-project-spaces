@@ -2,8 +2,7 @@ local wezterm = require 'wezterm'
 local bindings = require("project-spaces.bindings")
 local mode_registry = require("project-spaces.modes")
 local selector_builder = require("project-spaces.selector_builder")
-local events = require("project-spaces.events")
-local ws_new = require("project-spaces.new_workspace")
+local ws_watcher = require("project-spaces.workspace_watcher")
 local M = {}
 -- TODO: take work, as a label, if I rename that, currently active workspace
 -- I'd have expected it to appear as another entry in my active projects under the new name
@@ -13,8 +12,7 @@ local M = {}
 -- https://github.com/wezterm/wezterm/issues/2933
 -- wsl expects this to be done sooner
 wezterm.on('gui-startup', function()
-  ws_new.setup()
-  events.register()
+  ws_watcher.register()
 end)
 
 local function resolve_action(modes, ctx)

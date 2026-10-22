@@ -21,7 +21,6 @@ function M.build_modes()
                   path = wezterm.home_dir,
                 })
               end
-              ws_history.touch(line)
               window:perform_action(
                 wezterm.action.SwitchToWorkspace({
                   name = line,
@@ -35,7 +34,6 @@ function M.build_modes()
         end,
 
         workspace = function(ctx)
-          ws_history.touch(ctx.workspace_name)
           return wezterm.action.SwitchToWorkspace({
             name = ctx.workspace_name,
             -- when user picks an already running workspace, you switch by name
@@ -49,7 +47,6 @@ function M.build_modes()
           ws_history.prune(wezterm.mux.get_workspace_names())
           local target = ws_history.previous(ctx.current_workspace)
           if not target then return nil end
-          ws_history.touch(target)
           return wezterm.action.SwitchToWorkspace({
             name = target,
           })
