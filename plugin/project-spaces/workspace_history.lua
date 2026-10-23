@@ -7,7 +7,11 @@ local CAPACITY = 2
 
 local function keep(predicate)
   local kept = {}
-  for _, name in ipairs(wezterm.GLOBAL[GLOBAL_KEY] or {}) do
+  local stored = wezterm.GLOBAL[GLOBAL_KEY] or {}
+  -- wezterm.GLOBAL hands an empty list back as an object, which ipairs
+  -- can't index, but # still reads 0
+  for i = 1, #stored do
+    local name = stored[i]
     if predicate(name) then
       table.insert(kept, name)
     end
