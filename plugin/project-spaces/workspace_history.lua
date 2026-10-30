@@ -3,7 +3,8 @@ local M = {}
 
 -- Module state is lost on config reload, wezterm.GLOBAL is not
 local GLOBAL_KEY = "project_spaces_workspace_history"
-local CAPACITY = 2
+-- More than two, so closing a workspace still leaves one to alternate to
+local CAPACITY = 10
 
 local function keep(predicate)
   local kept = {}
