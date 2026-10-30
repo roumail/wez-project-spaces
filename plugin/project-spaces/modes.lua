@@ -37,8 +37,8 @@ function M.build_modes()
           return wezterm.action.SwitchToWorkspace({
             name = ctx.workspace_name,
             -- when user picks an already running workspace, you switch by name
-            spawn = ctx.is_active
-            and nil or { cwd = ctx.path },
+            spawn = (not ctx.is_active)
+            and { cwd = ctx.path } or nil,
           })
         end,
 
