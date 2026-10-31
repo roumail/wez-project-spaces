@@ -154,9 +154,12 @@ function M.apply_to_config(config, opts)
   }
   local user_bindings = opts.bindings or {}
 
-  for capability, default in pairs(default_bindings) do
+  -- action_callback names its event by creation order, and wezterm evaluates
+  -- the config in more than one Lua state, so the order must not vary the way
+  -- pairs() does or keys fire another binding's callback
+  for _, capability in ipairs({ "workspace", "alternate_workspace", "tab", "split_v", "split_h" }) do
     local binding = user_bindings[capability]
-    if binding == nil then binding = default end
+    if binding == nil then binding = default_bindings[capability] end
     if binding then
       table.insert(config.keys, {
         key = binding.key,
