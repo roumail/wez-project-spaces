@@ -1,86 +1,31 @@
--- wez_project_source.lua
 local wezterm = require("wezterm")
-local M = {}
-local runtime_projects = nil
 local FILE_NAME = "local_projects.lua"
 
-local function try_load(path)
-  local ok, result = pcall(dofile, path)
-  if not ok then
-    return nil, result
-  end
-  if type(result) ~= "table" then
-    return nil, "file did not return a table"
-  end
-  return result, nil
-end
+local projects = {
+  { label = "default", path = wezterm.home_dir },
+  { label = "home", path = "~" },
+  { label = "config_dir", path = wezterm.config_dir },
+}
+local paths = {
+  wezterm.home_dir .. "/" .. FILE_NAME,
+  wezterm.config_dir .. "/" .. FILE_NAME,
+}
 
-local function merge_projects(base, loaded)
-  local projects = {}
-
-  for _, p in ipairs(base) do
-    table.insert(projects, p)
-  end
-
-  if type(loaded) == "table" then
+local last_err
+for _, path in ipairs(paths) do
+  local ok, loaded = pcall(dofile, path)
+  if ok and type(loaded) == "table" then
     for _, p in ipairs(loaded) do
       table.insert(projects, p)
     end
+    return projects
   end
-
-  return projects
+  last_err = ok and "file did not return a table" or loaded
 end
 
-local function load_projects()
-  local home_path = wezterm.home_dir .. "/" .. FILE_NAME
-  local config_path = wezterm.config_dir .. "/" .. FILE_NAME
-
-  local paths = { home_path, config_path }
-
-  local base_projects = {
-    { label = "default", path = wezterm.home_dir },
-    { label = "home", path = "~" },
-    { label = "config_dir", path = wezterm.config_dir },
-  }
-
-  local last_err = nil
-
-  for _, path in ipairs(paths) do
-    local loaded_projects, err = try_load(path)
-    if loaded_projects then
-      return merge_projects(base_projects, loaded_projects)
-    end
-    last_err = err
-  end
-
-  wezterm.log_warn(
-    "Could not load " .. FILE_NAME ..
-    ". Tried:\n- " .. home_path ..
-    "\n- " .. config_path ..
-    "\nLast error: " .. tostring(last_err)
-  )
-  return base_projects
-end
-
-function M.all()
-if not runtime_projects then
-  runtime_projects = load_projects()
-end
-
-return runtime_projects
-end
-
-function M.exists(label)
-  for _, p in ipairs(M.all()) do
-    if p.label == label then
-      return true
-    end
-  end
-  return false
-end
-
-function M.add(project)
-  table.insert(M.all(), project)
-end
-
-return M
+wezterm.log_warn(
+  "Could not load " .. FILE_NAME ..
+  ". Tried:\n- " .. table.concat(paths, "\n- ") ..
+  "\nLast error: " .. tostring(last_err)
+)
+return projects

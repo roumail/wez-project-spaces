@@ -79,7 +79,7 @@ return config
 ```
 ## ⌨️ Keybindings
 
-Default bindings (see `bindings.lua`):
+Default bindings (see `plugin/project-spaces/init.lua`):
 
 * `LEADER + SHIFT + B` → Toggle between last two workspaces
 

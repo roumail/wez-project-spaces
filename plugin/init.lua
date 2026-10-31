@@ -1,13 +1,11 @@
--- wez_project_spaces.lua
 local wezterm = require("wezterm")
 local module_id = ...
 
--- find the root and add the contents of plugin to path
+-- https://wezterm.org/config/plugins.html#managing-a-plugin-with-multiple-lua-modules
 for _, plugin in ipairs(wezterm.plugin.list()) do
     if plugin.component == module_id then
         local sep = package.config:sub(1, 1)
         local base = plugin.plugin_dir .. sep .. "plugin" .. sep
-        -- add root/plugin/?.lua and plugin/?/init.lua
         package.path = table.concat({
           package.path,
           base .. "?.lua",
