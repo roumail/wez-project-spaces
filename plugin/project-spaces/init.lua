@@ -6,7 +6,8 @@ local M = {}
 -- Module state is lost on config reload, wezterm.GLOBAL is not.
 -- Least recently used first
 local HISTORY_KEY = "project_spaces_workspace_history"
-local HISTORY_CAPACITY = 2
+-- More than two, so closing a workspace still leaves one to alternate to
+local HISTORY_CAPACITY = 10
 
 local function keep_history(predicate)
   local kept = {}
@@ -110,12 +111,15 @@ function M.apply_to_config(config, opts)
   -- Handlers live in the Lua state of this config evaluation, gui-startup
   -- fires only once so registering there loses them on reload
   if not registered then
-    local last_workspace_by_window = {}
+    local last_workspace = nil
     wezterm.on("update-status", function(window)
+      -- window_id() is the mux window, which changes with every workspace
+      -- switch, so it can't key the last workspace. Follow the focused window
+      -- only, an unfocused one would flip history back to its own workspace
+      if not window:is_focused() then return end
       local current_workspace = window:active_workspace()
-      local window_id = window:window_id()
-      if current_workspace == last_workspace_by_window[window_id] then return end
-      last_workspace_by_window[window_id] = current_workspace
+      if current_workspace == last_workspace then return end
+      last_workspace = current_workspace
 
       local existing = existing_workspaces()
       -- Workspaces made outside the selector, by a rename for one, are
